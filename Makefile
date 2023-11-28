@@ -14,9 +14,7 @@ clean:
 	rm -f url-escape *.o
 
 check: url-escape
-	./url-escape -n <Makefile \
-	 | ./url-escape -dn \
-	 | diff -u Makefile -
+	./url-escape <Makefile | ./url-escape -d | diff -u Makefile -
 
 install: url-escape
 	install -d ${DESTDIR}${PREFIX}/bin \

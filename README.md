@@ -5,8 +5,8 @@ URL-escape and URL-unescape data
 ... | **url-escape** [**-d**] [**-n**]
 
 Reads from standard input, URL-escapes (or unescapes, with **-d**), and
-writes to standard output.  A trailing newline is added unless **-n**
-is given.
+writes to standard output. A trailing newline is added unless **-n**
+is given. If the input ends with a newline, it is ignored.
 
 Escaping and unescaping is performed with
 [curl_easy_escape()](
@@ -19,12 +19,12 @@ Examples
 --------
 Escape a string:
 
-    $ echo -n 'Hello, World!' | url-escape
+    $ echo 'Hello, World!' | url-escape
     Hello%2C%20World%21
 
 Escape a string and unescape it again:
 
-    $ echo -n 'Hello, World!' | url-escape -n | url-escape -d
+    $ echo 'Hello, World!' | url-escape | url-escape -d
     Hello, World!
 
 Installation

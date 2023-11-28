@@ -16,6 +16,7 @@ and writes to standard output.
 A trailing newline is added unless
 .Fl n
 is given.
+If the input ends with a newline, it is ignored.
 .Pp
 Escaping and unescaping is performed with
 .Xr curl_easy_escape 3
@@ -31,13 +32,13 @@ or 1 on any other error.
 .Sh EXAMPLES
 Escape a string:
 .Bd -literal -offset indent
-$ echo -n 'Hello, World!' | url-escape
+$ echo 'Hello, World!' | url-escape
 Hello%2C%20World%21
 .Ed
 .Pp
 Escape a string and unescape it again:
 .Bd -literal -offset indent
-$ echo -n 'Hello, World!' | url-escape -n | url-escape -d
+$ echo 'Hello, World!' | url-escape | url-escape -d
 Hello, World!
 .Ed
 .Sh SEE ALSO

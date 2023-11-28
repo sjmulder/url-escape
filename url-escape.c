@@ -43,6 +43,9 @@ main(int argc, char **argv)
 	if (!feof(stdin))
 		errx(1, "data too large");
 
+	if (nr && buf[nr-1] == '\n')
+		nr--; /* ignore trailing newline */
+
 	if (opt_decode)
 		output = curl_easy_unescape(curl, buf, nr, NULL);
 	else
