@@ -2,8 +2,7 @@ DESTDIR?=
 PREFIX?=	/usr/local
 MANPREFIX?=	${PREFIX}/man
 
-CFLAGS+=	`pkg-config --cflags libcurl` -Wall -Wextra
-LDLIBS+=	`pkg-config --libs libcurl`
+CFLAGS+=	 -Wall -Wextra
 
 all: url-escape
 
