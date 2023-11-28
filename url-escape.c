@@ -12,8 +12,7 @@ int
 main(int argc, char **argv)
 {
 	static char buf[4096];
-	int c;
-	int opt_decode=0, opt_nolf=0;
+	int opt_decode=0, opt_nolf=0, c;
 	size_t nr;
 	CURL *curl;
 	char *output;
