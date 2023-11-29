@@ -11,7 +11,7 @@ const char usage[] =
 int
 main(int argc, char **argv)
 {
-	static char buf[4096];
+	static char buf[4*1024*1024];	/* 4 MB */
 	int opt_decode=0, opt_nolf=0, c;
 	size_t nr;
 	CURL *curl;
