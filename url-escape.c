@@ -4,7 +4,8 @@
 #include <errno.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <sysexits.h>
+
+#define EX_USAGE	64
 
 const char usage[] =
 "usage: .. | url-decode [-d] [-n]\n";
