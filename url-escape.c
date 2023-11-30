@@ -40,7 +40,7 @@ escape(const char *src, size_t count, char *dst, size_t *lenp)
 			dst[len++] = "0123456789ABCDEF"[src[i]/16];
 			dst[len++] = "0123456789ABCDEF"[src[i]%16];
 		}
-	
+
 	*lenp = len;
 	return i;
 }
