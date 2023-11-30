@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
-#include <unistd.h>
+
+#ifdef _POSIX_VERSION
+# include <unistd.h>
+#endif
 
 #define EX_USAGE	64
 
@@ -95,8 +98,10 @@ main(int argc, char **argv)
 			}
 	}
 
+#ifdef _POSIX_VERSION
 	if (isatty(STDIN_FILENO))
 		fputs("reading from stdin, EOF (^D) to end\n", stderr);
+#endif
 
 	nr = fread(buf, 1, sizeof(buf), stdin);
 	if (ferror(stdin)) {
