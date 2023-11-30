@@ -81,9 +81,10 @@ escape(const char *src, size_t count, char *dst, size_t *lenp)
 }
 
 /*
- * Unescape src, returns number of chars processed which may not be 'count'
- * if the input ends in an incomplete escape sequence. *lenp is set to
- * the number of chars written to dst, which must be at least 'count' long.
+ * Unescape src, returns number of chars processed which may not be
+ * 'count' if the input ends in an incomplete escape sequence. *lenp is
+ * set to the number of chars written to dst, which must be at least
+ * 'count' long.
  */
 static size_t
 unescape(const char *src, size_t count, char *dst, size_t *lenp)
@@ -95,7 +96,7 @@ unescape(const char *src, size_t count, char *dst, size_t *lenp)
 		if (src[i] != '%')
 			dst[len++] = src[i];	/* unescaped char */
 		else if (i+2 >= count)
-			break;			/* incomplete sequence */
+			break;			/* incomplete seq. */
 		else if ((c = fromhex(&src[i+1], 2)) == -1)
 			dst[len++] = src[i];	/* invalid sequence */
 		else {
@@ -114,8 +115,8 @@ main(int argc, char **argv)
 	int opt_nolf=0, eof=0, c;
 	size_t nsrc=0;	/* length of src */
 	size_t ndst=0;	/* length of dst */
-	size_t ntop;	/* how many chars we want to encode/decode */
-	size_t np;	/* how many chars were actually encoded/decoded */
+	size_t ntop;	/* no. chars we want to encode/decode */
+	size_t np;	/* no. chars actually encoded/decoded */
 	ssize_t nr;	/* number of chars read */
 	size_t (*func)(const char*, size_t, char*, size_t*) = escape;
 
