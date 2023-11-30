@@ -1,14 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <ctype.h>
-
-#ifdef _POSIX_VERSION
-# include <unistd.h>
-#endif
-
-#define EX_USAGE	64
+#include <unistd.h>
+#include <getopt.h>
+#include <sysexits.h>
+#include <err.h>
 
 const char usage[] =
 "usage: .. | url-decode [-d] [-n]\n";
@@ -63,57 +59,30 @@ int
 main(int argc, char **argv)
 {
 	static char buf[4*1024*1024];	/* 4 MB */
-	int opt_decode=0, opt_nolf=0, i;
+	int opt_decode=0, opt_nolf=0, c;
 	size_t nr;
 
 #ifdef __OpenBSD__
-	if (pledge("stdio", NULL) == -1) {
-		fprintf(stderr, "url-escape: %s\n", strerror(errno));
-		exit(1);
-	}
+	if (pledge("stdio", NULL) == -1)
+		err(1, "pledge");
 #endif
 
-	if (argc > 2) {
-		fprintf(stderr, "url-escape: too many arguments "
-		    "(try -h)\n");
-		exit(EX_USAGE);
-	}
-
-	if (argv[1]) {
-		if (argv[1][0] != '-') {
-			fprintf(stderr, "url-escape: bad argument "
-			    "(try -h)\n");
-			exit(EX_USAGE);
+	while ((c = getopt(argc, argv, "dnh")) != -1)
+		switch (c) {
+		case 'd': opt_decode = 1; break;
+		case 'n': opt_nolf = 1; break;
+		case 'h': fputs(usage, stderr); return 0;
+		default: return EX_USAGE;
 		}
 
-		for (i=1; argv[1][i]; i++)
-			switch (argv[1][i]) {
-			case 'd': opt_decode = 1; break;
-			case 'n': opt_nolf = 1; break;
-			case 'h': fputs(usage, stderr); return 0;
-			default:
-				fprintf(stderr, "url-escape: bad flag: -%c "
-				    "(try -h)\n", argv[1][i]);
-				exit(EX_USAGE);
-			}
-	}
-
-#ifdef _POSIX_VERSION
 	if (isatty(STDIN_FILENO))
 		fputs("reading from stdin, EOF (^D) to end\n", stderr);
-#endif
 
 	nr = fread(buf, 1, sizeof(buf), stdin);
-	if (ferror(stdin)) {
-		fprintf(stderr, "url-escape: <stdin>: %s\n",
-		    strerror(errno));
-		exit(1);
-	}
-
-	if (!feof(stdin)) {
-		fprintf(stderr, "url-escape: <stdin>: too large\n");
-		exit(1);
-	}
+	if (ferror(stdin))
+		err(1, "<stdin>");
+	if (!feof(stdin))
+		errx(1, "data too large");
 
 	if (nr && buf[nr-1] == '\n')
 		nr--; /* ignore trailing newline */

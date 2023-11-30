@@ -1,30 +1,13 @@
 on: push
 
 jobs:
-  linux:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - run: make check
 
-  mingw-i686:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - run: |
-        sudo dpkg --add-architecture i386 &&
-        sudo apt-get update &&
-        sudo apt-get install -y wine32 gcc-mingw-w64-i686-win32
-    - run: make -f Makefile.mingw CC=i686-w64-mingw32-gcc WINE=wine check
-
-  mingw-x86_64:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - run: sudo apt-get install -y wine64 gcc-mingw-w64-x86-64-win32
-    - run: make -f Makefile.mingw CC=x86_64-w64-mingw32-gcc WINE=wine check
-
-  macos:
+  build-macos:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
