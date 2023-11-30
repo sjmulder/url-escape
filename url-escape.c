@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <sysexits.h>
 
 const char usage[] =
@@ -60,7 +59,7 @@ int
 main(int argc, char **argv)
 {
 	static char buf[4*1024*1024];	/* 4 MB */
-	int opt_decode=0, opt_nolf=0, c;
+	int opt_decode=0, opt_nolf=0, i;
 	size_t nr;
 
 #ifdef __OpenBSD__
@@ -70,13 +69,30 @@ main(int argc, char **argv)
 	}
 #endif
 
-	while ((c = getopt(argc, argv, "dnh")) != -1)
-		switch (c) {
-		case 'd': opt_decode = 1; break;
-		case 'n': opt_nolf = 1; break;
-		case 'h': fputs(usage, stderr); return 0;
-		default: return EX_USAGE;
+	if (argc > 2) {
+		fprintf(stderr, "url-escape: too many arguments "
+		    "(try -h)\n");
+		exit(EX_USAGE);
+	}
+
+	if (argv[1]) {
+		if (argv[1][0] != '-') {
+			fprintf(stderr, "url-escape: bad argument "
+			    "(try -h)\n");
+			exit(EX_USAGE);
 		}
+
+		for (i=1; argv[1][i]; i++)
+			switch (argv[1][i]) {
+			case 'd': opt_decode = 1; break;
+			case 'n': opt_nolf = 1; break;
+			case 'h': fputs(usage, stderr); return 0;
+			default:
+				fprintf(stderr, "url-escape: bad flag: -%c "
+				    "(try -h)\n", argv[1][i]);
+				exit(EX_USAGE);
+			}
+	}
 
 	if (isatty(STDIN_FILENO))
 		fputs("reading from stdin, EOF (^D) to end\n", stderr);
