@@ -1,6 +1,6 @@
 FROM debian AS build
 RUN apt-get update && \
-    apt-get install -y build-essential libcurl4-openssl-dev && \
+    apt-get install -y build-essential pkg-config libcurl4-openssl-dev && \
     apt-get clean
 WORKDIR /work
 COPY . .
