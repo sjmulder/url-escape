@@ -6,7 +6,7 @@
 #include <err.h>
 
 const char usage[] =
-"usage: .. | url-decode [-d] [-n]\n";
+"usage: .. | url-escape [-d] [-n]\n";
 
 const char map[][4] = {
 	"%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",

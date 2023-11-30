@@ -2,7 +2,7 @@ DESTDIR?=
 PREFIX?=	/usr/local
 MANPREFIX?=	${PREFIX}/man
 
-CFLAGS+=	 -Wall -Wextra
+CFLAGS+=	 -Wall -Wextra -O3 -g
 
 all: url-escape
 
