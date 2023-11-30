@@ -27,40 +27,53 @@ fromhex(const char *s, size_t len)
 	return acc;
 }
 
-static void
-escape(const char *s, size_t len, FILE *f)
+static size_t
+escape(const char *src, size_t count, char *dst, size_t *lenp)
 {
-	size_t i;
+	size_t len=0, i;
 
-	for (i=0; i<len; i++) {
-		if (isalnum(s[i]) || strchr("_.-~", s[i]))
-			fputc(s[i], f);
-		else
-			printf("%%%02X", s[i]);
-	}
+	for (i=0; i < count; i++)
+		if (isalnum(src[i]) || strchr("_.-~", src[i]))
+			dst[len++] = src[i];
+		else {
+			dst[len++] = '%';
+			dst[len++] = "0123456789ABCDEF"[src[i]/16];
+			dst[len++] = "0123456789ABCDEF"[src[i]%16];
+		}
+	
+	*lenp = len;
+	return i;
 }
 
-static void
-unescape(const char *s, size_t len, FILE *f)
+static size_t
+unescape(const char *src, size_t count, char *dst, size_t *lenp)
 {
-	size_t i;
+	size_t len=0, i;
 	int c;
 
-	for (i=0; i<len; i++) {
-		if (i+2<len && s[i]=='%' && (c=fromhex(s+i+1, 2))!=-1) {
-			fputc(c, f);
+	for (i=0; i < count; i++)
+		if (src[i] != '%')
+			dst[len++] = src[i];	/* unescaped char */
+		else if (i+2 >= count)
+			break;			/* incomplete sequence */
+		else if ((c = fromhex(&src[i+1], 2)) == -1)
+			dst[len++] = src[i];	/* invalid sequence */
+		else {
+			dst[len++] = c;		/* decoded sequence */
 			i += 2;
-		} else
-			fputc(s[i], stdout);
-	}
+		}
+
+	*lenp = len;
+	return i;
 }
 
 int
 main(int argc, char **argv)
 {
-	static char buf[4*1024*1024];	/* 4 MB */
+	static char src[1*1024*1024];	/* 1 MB */
+	static char dst[3*1024*1024];	/* 3 MB */
 	int opt_decode=0, opt_nolf=0, c;
-	size_t nr;
+	size_t nsrc, ndst, np;
 
 #ifdef __OpenBSD__
 	if (pledge("stdio", NULL) == -1)
@@ -78,19 +91,22 @@ main(int argc, char **argv)
 	if (isatty(STDIN_FILENO))
 		fputs("reading from stdin, EOF (^D) to end\n", stderr);
 
-	nr = fread(buf, 1, sizeof(buf), stdin);
+	nsrc = fread(src, 1, sizeof(src), stdin);
 	if (ferror(stdin))
 		err(1, "<stdin>");
 	if (!feof(stdin))
 		errx(1, "data too large");
 
-	if (nr && buf[nr-1] == '\n')
-		nr--; /* ignore trailing newline */
+	if (nsrc && src[nsrc-1] == '\n')
+		nsrc--; /* ignore trailing newline */
 
 	if (opt_decode)
-		unescape(buf, nr, stdout);
+		np = unescape(src, nsrc, dst, &ndst);
 	else
-		escape(buf, nr, stdout);
+		np = escape(src, nsrc, dst, &ndst);
+
+	fwrite(dst, ndst, 1, stdout);
+	fwrite(&src[np], nsrc-np, 1, stdout);	/* unprocessed tail */
 
 	if (!opt_nolf)
 		fputc('\n', stdout);
