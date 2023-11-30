@@ -4,8 +4,8 @@ RUN apt-get update && \
     apt-get clean
 WORKDIR /work
 COPY . .
-RUN make install DESTDIR=dest
+RUN env LDFLAGS=-static make
 
-FROM debian
-COPY --from=build /work/dest /
-CMD ["/usr/local/bin/url-escape"]
+FROM scratch
+COPY --from=build /work/url-escape /
+CMD ["/url-escape"]
