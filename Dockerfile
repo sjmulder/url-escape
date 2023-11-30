@@ -4,7 +4,7 @@ RUN apt-get update && \
     apt-get clean
 WORKDIR /work
 COPY . .
-RUN env LDFLAGS=-static make
+RUN env LDFLAGS=-static make clean all
 
 FROM scratch
 COPY --from=build /work/url-escape /
