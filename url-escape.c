@@ -27,6 +27,11 @@ fromhex(const char *s, size_t len)
 	return acc;
 }
 
+/*
+ * Escapes src, returns number of chars processed which will be 'count'.
+ * *lenp is set to the number of chars written to dst, which must be at
+ * least 3*count long.
+ */
 static size_t
 escape(const char *src, size_t count, char *dst, size_t *lenp)
 {
@@ -45,6 +50,11 @@ escape(const char *src, size_t count, char *dst, size_t *lenp)
 	return i;
 }
 
+/*
+ * Unescape src, returns number of chars processed which may not be 'count'
+ * if the input ends in an incomplete escape sequence. *lenp is set to
+ * the number of chars written to dst, which must be at least 'count' long.
+ */
 static size_t
 unescape(const char *src, size_t count, char *dst, size_t *lenp)
 {
@@ -70,10 +80,14 @@ unescape(const char *src, size_t count, char *dst, size_t *lenp)
 int
 main(int argc, char **argv)
 {
-	static char src[1*1024*1024];	/* 1 MB */
-	static char dst[3*1024*1024];	/* 3 MB */
-	int opt_decode=0, opt_nolf=0, c;
-	size_t nsrc, ndst, np;
+	static char src[4096], dst[3*4096];
+	int opt_nolf=0, eof=0, c;
+	size_t nsrc=0;	/* length of src */
+	size_t ndst=0;	/* length of dst */
+	size_t ntop;	/* how many chars we want to encode/decode */
+	size_t np;	/* how many chars were actually encoded/decoded */
+	ssize_t nr;	/* number of chars read */
+	size_t (*func)(const char*, size_t, char*, size_t*) = escape;
 
 #ifdef __OpenBSD__
 	if (pledge("stdio", NULL) == -1)
@@ -82,7 +96,7 @@ main(int argc, char **argv)
 
 	while ((c = getopt(argc, argv, "dnh")) != -1)
 		switch (c) {
-		case 'd': opt_decode = 1; break;
+		case 'd': func = unescape; break;
 		case 'n': opt_nolf = 1; break;
 		case 'h': fputs(usage, stderr); return 0;
 		default: return EX_USAGE;
@@ -90,23 +104,30 @@ main(int argc, char **argv)
 
 	if (isatty(STDIN_FILENO))
 		fputs("reading from stdin, EOF (^D) to end\n", stderr);
+	
+	do {
+		/* top up buffer (it may hold unprocessed chars) */
+		nr = read(STDIN_FILENO, src+nsrc, sizeof(src)-nsrc);
+		if (nr == 0) eof = 1;
+		if (nr ==-1) err(1, "<stdin>");
+	
+		nsrc += (size_t)nr;
+		ntop = nsrc;
 
-	nsrc = fread(src, 1, sizeof(src), stdin);
-	if (ferror(stdin))
-		err(1, "<stdin>");
-	if (!feof(stdin))
-		errx(1, "data too large");
+		/* skip trailing \n; picked up next round if not EOF */
+		if (nsrc && src[nsrc-1] == '\n')
+			ntop--; /* ignore trailing newline */
 
-	if (nsrc && src[nsrc-1] == '\n')
-		nsrc--; /* ignore trailing newline */
+		np = func(src, ntop, dst, &ndst);
+		fwrite(dst, ndst, 1, stdout);
 
-	if (opt_decode)
-		np = unescape(src, nsrc, dst, &ndst);
-	else
-		np = escape(src, nsrc, dst, &ndst);
+		/* move unprocessed chars to front of 'src' */
+		memmove(src, src+np, nsrc-np);
+		nsrc -= np;
+	} while (!eof);
 
-	fwrite(dst, ndst, 1, stdout);
-	fwrite(&src[np], nsrc-np, 1, stdout);	/* unprocessed tail */
+	/* write out remaining unprocessed chars */
+	fwrite(src, ntop-np, 1, stdout);
 
 	if (!opt_nolf)
 		fputc('\n', stdout);
