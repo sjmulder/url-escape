@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sysexits.h>
@@ -38,7 +37,11 @@ escape(const char *src, size_t count, char *dst, size_t *lenp)
 	size_t len=0, i;
 
 	for (i=0; i < count; i++)
-		if (isalnum(src[i]) || strchr("_.-~", src[i]))
+		if (src[i] == '_' || src[i] == '.' ||
+		    src[i] == '-' || src[i] == '~' ||
+		    (src[i] >= '0' && src[i] <= '9') ||
+		    (src[i] >= 'A' && src[i] <= 'Z') ||
+		    (src[i] >= 'a' && src[i] <= 'z'))
 			dst[len++] = src[i];
 		else {
 			dst[len++] = '%';
