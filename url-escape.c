@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sysexits.h>
-#include <err.h>
 
 const char usage[] =
 "usage: .. | url-decode [-d] [-n]\n";
@@ -63,8 +64,10 @@ main(int argc, char **argv)
 	size_t nr;
 
 #ifdef __OpenBSD__
-	if (pledge("stdio", NULL) == -1)
-		err(1, "pledge");
+	if (pledge("stdio", NULL) == -1) {
+		fprintf(stderr, "url-escape: %s\n", strerror(errno));
+		exit(1);
+	}
 #endif
 
 	while ((c = getopt(argc, argv, "dnh")) != -1)
@@ -79,10 +82,16 @@ main(int argc, char **argv)
 		fputs("reading from stdin, EOF (^D) to end\n", stderr);
 
 	nr = fread(buf, 1, sizeof(buf), stdin);
-	if (ferror(stdin))
-		err(1, "<stdin>");
-	if (!feof(stdin))
-		errx(1, "data too large");
+	if (ferror(stdin)) {
+		fprintf(stderr, "url-escape: <stdin>: %s\n",
+		    strerror(errno));
+		exit(1);
+	}
+
+	if (!feof(stdin)) {
+		fprintf(stderr, "url-escape: <stdin>: too large\n");
+		exit(1);
+	}
 
 	if (nr && buf[nr-1] == '\n')
 		nr--; /* ignore trailing newline */
